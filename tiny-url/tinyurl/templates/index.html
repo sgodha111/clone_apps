@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TinyURL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Local URL shortener</p>
+        <h1>TinyURL</h1>
+        <p class="lede">Create compact links, redirect in milliseconds, and track clicks with a simple Python service.</p>
+      </section>
+
+      <section class="tool" aria-label="Shorten URL">
+        <form id="shorten-form">
+          <label for="long-url">Long URL</label>
+          <div class="input-row">
+            <input id="long-url" name="long_url" type="url" placeholder="https://example.com/very/long/path" required>
+            <button type="submit">Shorten</button>
+          </div>
+          <label for="custom-alias">Custom alias</label>
+          <input id="custom-alias" name="custom_alias" type="text" placeholder="optional">
+        </form>
+        <div id="result" class="result" hidden></div>
+      </section>
+    </main>
+
+    <script>
+      const form = document.querySelector("#shorten-form");
+      const result = document.querySelector("#result");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        result.hidden = false;
+        result.textContent = "Creating link...";
+
+        const payload = {
+          long_url: form.long_url.value,
+          custom_alias: form.custom_alias.value || undefined
+        };
+
+        const response = await fetch("/api/shorten", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          result.textContent = data.error || "Could not create short URL.";
+          return;
+        }
+
+        result.innerHTML = `<span>Short URL</span><a href="${data.short_url}" target="_blank" rel="noreferrer">${data.short_url}</a>`;
+      });
+    </script>
+  </body>
+</html>
